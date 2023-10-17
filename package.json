@@ -1,0 +1,21 @@
+{
+  "name": "dynakit",
+  "version": "0.0.1",
+  "description": "Written in typescript. A custom nodejs package designed to mimic the functionality of React, but giving the developer more control. This package is closer to vanilla code than React.",
+  "main": "index.ts",
+  "type": "commonjs",
+  "scripts": {
+    "test": "electron ."
+  },
+  "keywords": [
+    "html",
+    "javascript",
+    "js",
+    "dynakit"
+  ],
+  "author": "Ty Kutcher",
+  "license": "MIT",
+  "dependencies": {
+    "custom-react": "file:"
+  }
+}
