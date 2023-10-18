@@ -1,4 +1,5 @@
 import { CustomEventEmitter } from './event';
+import { RouteDetector } from './routes';
 
 class Style {
     attr: { [key: string]: any };
@@ -38,7 +39,7 @@ class cElement extends CustomEventEmitter {
     }
 
     getSupportedEvents(elementType: string): Array<string> {
-        const eventTypes = [];
+        const eventTypes: Array<string> = [];
         const testElement = document.createElement(elementType);
 
         for (const key in window) {
@@ -53,13 +54,27 @@ class cElement extends CustomEventEmitter {
 
         return eventTypes;
     }
+
+    getAttributes(): { [key: string]: string } {
+        const attributes = {};
+        const elementAttributes = this.element.attributes;
+
+        for (let i = 0; i < elementAttributes.length; i++) {
+            const attribute = elementAttributes[i];
+            attributes[attribute.name] = attribute.value;
+        }
+
+        return attributes;
+    }
 }
 
-export class Root {
+export class Root extends CustomEventEmitter {
     _root: HTMLElement;
     _compiled: Array<cElement> = [];
+    _routeDetector: RouteDetector;
 
     constructor(rootId: string) {
+        super();
         const GenerateRandomName = (size: number): string => {
             const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
             let result = '';
@@ -79,6 +94,10 @@ export class Root {
         } else {
             this._root = document.createElement("div");
             this._root.id = `_${GenerateRandomName(7)}root`;
+            this._routeDetector = new RouteDetector();
+            this._routeDetector.on("New_Route-like_object", (data: any) => {
+                this.emit("new", data);
+            })
         }
     }
 
@@ -99,6 +118,57 @@ export class Root {
     recompileAll() {
         this._root.innerHTML = "";
         this.compileElements(this._compiled);
+    }
+}
+
+export class Router extends cElement {
+    dest: string;
+    text: string;
+    onchange: Function = () => { };
+
+    constructor() {
+        super([], '', []);
+        this.on("click", (e) => {
+            this.onchange(e);
+        })
+        let attrs = this.getAttributes();
+        for (let [key, value] of Object.entries(attrs)) {
+            if (key.toLowerCase() == "dest") {
+                this.dest = value;
+            } else if (key.toLowerCase() == "text") {
+                this.text = value;
+            }
+        }
+        if (!this.dest) {
+            throw new Error("Router tag requires a 'dest' attribute of type string, got undefined");
+        }
+    }
+}
+
+export class Route extends cElement {
+    dest: string;
+    text: string;
+
+    constructor() {
+        super([], '', []);
+        this.on("click", (e) => {
+            this.redirect();
+        })
+        let attrs = this.getAttributes();
+        for (let [key, value] of Object.entries(attrs)) {
+            if (key.toLowerCase() == "dest") {
+                this.dest = value;
+            } else if (key.toLowerCase() == "text") {
+                this.text = value;
+            }
+        }
+        if (!this.dest) {
+            throw new Error("Route tag requires a 'dest' attribute of type string, got undefined");
+        }
+    }
+
+    redirect() {
+        // Should be a DOM-wide event fired 'route-change' that includes the new 'dest'
     }
 }
 
